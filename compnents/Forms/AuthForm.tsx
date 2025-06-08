@@ -12,6 +12,9 @@ import FormField from "./FormField";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/firebasee/client";
+import { signIn, signUp } from "@/lib/action/auth.action";
 
 
 const formSchema = z.object({
@@ -38,16 +41,37 @@ const AuthForm = ({ type }: { type: string }) => {
         },
     })
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onSubmit(values: z.infer<typeof formSchema>) {
        if(type == 'sign-in') {
-            // Handle sign-in logic here
-            toast.success("Signed in successfully!");
-            console.log("Signing in with values:", values);
+            const { email, password } = values;
+            const userCredential= await signInWithEmailAndPassword(auth, email, password);
+            const idToken=await userCredential.user.getIdToken();
+            if(!userCredential.user) {
+                toast.error("Invalid email or password. Please try again.");
+                return;
+            }
 
+            await signIn({
+                email,
+                idToken,
+            })
             router.push("/")
        }
        else {
-            // Handle sign-up logic here
+            const { name, email, password } = values;
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const result = await signUp({
+                uid: userCredential.user.uid,
+                email,
+                password,
+                name: name,
+            })
+
+            if(!result?.success) {
+                toast.error(result?.message || "Failed to create account. Please try again.");
+                return;
+            }
+
             toast.success("Account created successfully!");
             router.push("/sign-in")
        }
