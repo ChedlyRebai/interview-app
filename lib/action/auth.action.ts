@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { db, auth } from "../../firebasee/admin";
+import { User } from "firebase/auth";
 
 export async function signUp(params: SignUpParams) {
   const { email, password, name, uid } = params;
@@ -21,10 +22,10 @@ export async function signUp(params: SignUpParams) {
       createdAt: new Date(),
     });
 
-    return{
-        success: true,
-        message: "Account created successfully. You can now sign in.",
-    }
+    return {
+      success: true,
+      message: "Account created successfully. You can now sign in.",
+    };
   } catch (error: any) {
     console.error("Error during sign up:", error);
     if (error.code === "auth/email-already-in-use") {
@@ -75,4 +76,33 @@ export async function signIn(params: SignInParams) {
       message: "An error occurred during sign in. Please try again later.",
     };
   }
+}
+
+export async function getCurrentUser(): Promise<User | null> {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session")?.value;
+  if (!sessionCookie) {
+    return null; // No session cookie found
+  }
+  try {
+
+    const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+    const userRecord = await db.collection("users").doc(decodedClaims.uid).get();
+    if (!userRecord.exists) {
+        return null; // User not found in the database
+    }
+    return {
+        ...userRecord.data(),
+        id: userRecord.id,
+    } as unknown as User ; // Return user data with id
+    
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
+  }
+}
+
+export async function isAthenticated(){
+    const user= await getCurrentUser();
+    return user !== null; 
 }
