@@ -6,16 +6,12 @@ import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import {
     Form,
-    FormControl,
-    FormDescription,
-    FormItem,
-    FormLabel,
-    FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import Image from "next/image";
 import FormField from "./FormField";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 
 const formSchema = z.object({
@@ -32,6 +28,7 @@ const formSchema = z.object({
 
 
 const AuthForm = ({ type }: { type: string }) => {
+    const router = useRouter();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -42,7 +39,18 @@ const AuthForm = ({ type }: { type: string }) => {
     })
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-       
+       if(type == 'sign-in') {
+            // Handle sign-in logic here
+            toast.success("Signed in successfully!");
+            console.log("Signing in with values:", values);
+
+            router.push("/")
+       }
+       else {
+            // Handle sign-up logic here
+            toast.success("Account created successfully!");
+            router.push("/sign-in")
+       }
     }
 
     const isSignIn = type === "sign-in"
