@@ -13,8 +13,10 @@ export default async function Home() {
     await getInterviewByUserId(currentUser?.uid || ""),
     await getLatestInterviews({ userId: currentUser?.uid || "", limit: 5 }),
   ])
-  
+
   const hasPastInterviews = userInterviews?.length || 0 > 0;
+
+  const hasUpcomingnterviews = lastesInterviews?.length || 0 > 0;
   return (
     <>
       <section className="card-cta">
