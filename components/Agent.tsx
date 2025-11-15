@@ -24,7 +24,7 @@ const Agent = ({ userName, userId, type }: AgentProps) => {
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [message, setMessage] = useState<saveMessages[]>([]);
   const [lastMessage, setLastMessage] = useState<string>("My name is Chedly");
-  
+
   useEffect(() => {
     const onCallStart = () => {
       setCallStatus(CallStatus.ACTIVE);
@@ -63,34 +63,31 @@ const Agent = ({ userName, userId, type }: AgentProps) => {
     };
   }, []);
 
-
   const handleCall = async () => {
-    setCallStatus(CallStatus.CONNECTING)
+    setCallStatus(CallStatus.CONNECTING);
 
-    await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!,{
-      variableValues:{
-        username:userName,
-        userid:userId,
-        type:type
-      }
-    })
+    await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
+      variableValues: {
+        username: userName,
+        userid: userId,
+        type: type,
+      },
+    });
   };
 
+  useEffect(() => {
+    if (callStatus === CallStatus.FINISHED) router.push("/");
+  }, [message, callStatus, type, userId]);
 
-  useEffect(()=>{
-    if(callStatus === CallStatus.FINISHED) router.push('/')
-
-  },[message,callStatus,type,userId])
-
-  
   const handleDisconnect = () => {
     setCallStatus(CallStatus.FINISHED);
     vapi.stop();
   };
 
-  const latestMessage = message[message.length -1 ]?.content;
-  const isCallInactiveOrFinished = callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED;
-  
+  const latestMessage = message[message.length - 1]?.content;
+  const isCallInactiveOrFinished =
+    callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED;
+
   const isSpeaker = true; // This should be determined by your application logic
   return (
     <>
