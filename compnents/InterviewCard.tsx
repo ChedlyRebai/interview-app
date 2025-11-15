@@ -5,23 +5,28 @@ import { getRandomInterviewCover } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import DisplayTechIcons from "./Forms/DisplayTechIcons";
-const InterviewCard = ({interviewId,role,techstack,type,createdAt,userId}:InterviewCardProps) => {
+const InterviewCard = ({
+  interviewId,
+  role,
+  techstack,
+  type,
+  createdAt,
+  userId,
+}: InterviewCardProps) => {
   const feedback = null as Feedback | null; // Placeholder for feedback data, if needed
-  const normalizeType= /mix/gi.test(type) ? "Mixed" : type;  
-  const formattedDate = dayjs(feedback?.createdAt || createdAt || Date.now()).format("MMM D, YYYY");
+  const normalizeType = /mix/gi.test(type) ? "Mixed" : type;
+  const formattedDate = dayjs(
+    feedback?.createdAt || createdAt || Date.now()
+  ).format("MMM D, YYYY");
 
-  
   return (
-     <div className="card-border w-[360px] max-sm:w-full min-h-96">
+    <div className="card-border w-[360px] max-sm:w-full min-h-96">
       <div className="card-interview">
         <div>
           {/* Type Badge */}
-          <div
-            
-          >
+          <div>
             <p className="badge-text ">{normalizeType}</p>
           </div>
-
           {/* Cover Image */}
           <Image
             src={getRandomInterviewCover()}
@@ -30,10 +35,8 @@ const InterviewCard = ({interviewId,role,techstack,type,createdAt,userId}:Interv
             height={90}
             className="rounded-full object-fit size-[90px]"
           />
-
           {/* Interview Role */}
           <h3 className="mt-5 capitalize">{role} Interview</h3>
-
           {/* Date & Score */}
           <div className="flex flex-row gap-5 mt-3">
             <div className="flex flex-row gap-2">
@@ -45,7 +48,6 @@ const InterviewCard = ({interviewId,role,techstack,type,createdAt,userId}:Interv
               />
               <p>{formattedDate}</p>
             </div>
-
             <div className="flex flex-row gap-2 items-center">
               <Image src="/star.svg" width={22} height={22} alt="star" />
               <p>{feedback?.totalScore || "---"}/100</p>
@@ -60,7 +62,7 @@ const InterviewCard = ({interviewId,role,techstack,type,createdAt,userId}:Interv
         </div>
 
         <div className="flex flex-row justify-between">
-           <DisplayTechIcons techStack={techstack} /> 
+          <DisplayTechIcons techStack={techstack} />
           <Button className="btn-primary">
             <Link
               href={
