@@ -51,7 +51,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <div className="flex flex-col gap-6 mt-8">
+      {/* <div className="flex flex-col gap-6 mt-8">
         <h2>Take an Interview</h2>
         {hasPastInterviews ? (
           userInterviews?.map((interview) => {
@@ -63,7 +63,21 @@ export default async function Home() {
             started!
           </p>
         )}
-      </div>
+      </div> */}
+
+      <section className="flex flex-col gap-6 mt-6">
+        <h2> Your interviews</h2>
+        <div className="interviews-section">
+          {hasPastInterviews ? (lastesInterviews?.map((interview) => (
+            <InterviewCard key={interview.id} {...interview} />
+          ))):(
+            <p>
+              You have no past interviews. Take your first interview now to get
+              started!
+            </p>
+          )}
+        </div>
+      </section>
     </>
   );
 }
