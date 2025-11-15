@@ -1,7 +1,7 @@
 import InterviewCard from "@/compnents/InterviewCard";
 import { Button } from "@/components/ui/button";
 import { dummyInterviews } from "@/constants";
-import { getCurrentUser, getInterviewByUserId } from "@/lib/action/auth.action";
+import { getCurrentUser, getInterviewByUserId, getLatestInterviews } from "@/lib/action/auth.action";
 import { get } from "http";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import Link from "next/link";
 export default async function Home() {
   const currentUser = await getCurrentUser();
   const userInterviews = await getInterviewByUserId(currentUser?.uid || "");
-
+  const lastesInterviews = await getLatestInterviews({userId:currentUser?.uid ||'',limit:5});
   const hasPastInterviews = userInterviews?.length || 0 > 0;
   return (
     <>
