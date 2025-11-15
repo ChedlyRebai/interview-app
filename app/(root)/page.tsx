@@ -8,8 +8,12 @@ import Link from "next/link";
 
 export default async function Home() {
   const currentUser = await getCurrentUser();
-  const userInterviews = await getInterviewByUserId(currentUser?.uid || "");
-  const lastesInterviews = await getLatestInterviews({userId:currentUser?.uid ||'',limit:5});
+
+  const [userInterviews, lastesInterviews] = await Promise.all([
+    await getInterviewByUserId(currentUser?.uid || ""),
+    await getLatestInterviews({ userId: currentUser?.uid || "", limit: 5 }),
+  ])
+  
   const hasPastInterviews = userInterviews?.length || 0 > 0;
   return (
     <>
