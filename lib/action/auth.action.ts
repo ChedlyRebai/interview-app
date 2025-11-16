@@ -82,8 +82,6 @@ export async function signIn(params: SignInParams) {
 
     await setSessionCookie(idToken);
   } catch (error: any) {
-    console.log("");
-
     return {
       success: false,
       message: "Failed to log into account. Please try again.",
@@ -107,15 +105,15 @@ export async function getCurrentUser(): Promise<User | null> {
 
   try {
     const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
-    console.log("decodedClaims", decodedClaims.user_id);
+
     // get user info from db
     const userRecord = await db
       .collection("users")
       .doc(decodedClaims.user_id)
       .get();
-    console.log("userRecord", userRecord.id);
+
     if (!userRecord.exists) return null;
-    console.log("userRecord data", userRecord.data());
+
     return {
       ...userRecord.data(),
       id: userRecord.id,
@@ -147,8 +145,6 @@ export async function getLatestInterviews(
     .limit(limit)
     .get();
 
-  console.log("interviews", interviews.docs.length);
-
   return interviews.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
@@ -164,18 +160,20 @@ export async function getInterviewsByUserId(
     .orderBy("createdAt", "desc")
     .get();
 
-  //  console.log('interviews',interviews.docs.length);
-  console.log("userid::", userId);
   return interviews.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   })) as Interview[];
 }
 
+
+
+
 export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId } = params;
 
   try {
+    // Format transcript as readable bullet points
     const formattedTranscript = transcript
       .map(
         (sentence: { role: string; content: string }) =>
@@ -183,39 +181,54 @@ export async function createFeedback(params: CreateFeedbackParams) {
       )
       .join("");
 
+    // Call Gemini with SAFE schema (no arrays → no proto errors)
     const { object } = await generateObject({
       model: google("gemini-2.0-flash-001"),
-      
       schema: feedbackSchema,
+      system:
+        "You are a professional interviewer analyzing a mock interview. Your task is to produce highly structured, strict JSON that matches the provided schema.",
       prompt: `
-        You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
+        You are an AI interviewer analyzing a mock interview.
+
         Transcript:
         ${formattedTranscript}
 
-        Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
-        - **Communication Skills**: Clarity, articulation, structured responses.
-        - **Technical Knowledge**: Understanding of key concepts for the role.
-        - **Problem-Solving**: Ability to analyze problems and propose solutions.
-        - **Cultural & Role Fit**: Alignment with company values and job role.
-        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.
-        `,
-      system:
-        "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
-    });
+        Score the candidate from 0 to 100 ONLY for the following categories:
+        - Communication Skills
+        - Technical Knowledge
+        - Problem-Solving
+        - Cultural & Role Fit
+        - Confidence & Clarity
 
+        Then provide:
+        - strengths
+        - areasForImprovement
+        - finalAssessment
+
+        Respond ONLY with data matching the schema.
+      `
+    });
+    console.log("Generated feedback object:**********************************************", object);
+    // Build Firestore document
     const feedback = {
-      interviewId: interviewId,
-      userId: userId,
+      interviewId,
+      userId,
+      createdAt: new Date().toISOString(),
       totalScore: object.totalScore,
-      categoryScores: object.categoryScores,
+      // categoryScores: {
+      //   communicationSkills: object.communicationSkills,
+      //   technicalKnowledge: object.technicalKnowledge,
+      //   problemSolving: object.problemSolving,
+      //   culturalRoleFit: object.culturalRoleFit,
+      //   confidenceClarity: object.confidenceClarity
+      // },
       strengths: object.strengths,
       areasForImprovement: object.areasForImprovement,
-      finalAssessment: object.finalAssessment,
-      createdAt: new Date().toISOString(),
+      finalAssessment: object.finalAssessment
     };
 
+    // Save to Firestore
     let feedbackRef;
-
     if (feedbackId) {
       feedbackRef = db.collection("feedback").doc(feedbackId);
     } else {
@@ -227,7 +240,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
     return { success: true, feedbackId: feedbackRef.id };
   } catch (error) {
     console.error("Error saving feedback:", error);
-    return { success: false };
+    return { success: false, error };
   }
 }
 

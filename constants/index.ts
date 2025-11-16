@@ -189,6 +189,63 @@ export const feedbackSchema = z.object({
   finalAssessment: z.string(),
 });
 
+
+export const feedbackSchem = {
+  name: "feedback",
+  type: "object",
+  description: "AI-generated structured interview feedback.",
+  properties: {
+    totalScore: {
+      type: "number",
+      description: "Overall score between 0 and 100"
+    },
+    communicationSkills: {
+      type: "number",
+      description: "Score for communication skills 0-100"
+    },
+    technicalKnowledge: {
+      type: "number",
+      description: "Score for technical knowledge 0-100"
+    },
+    problemSolving: {
+      type: "number",
+      description: "Score for problem-solving 0-100"
+    },
+    culturalRoleFit: {
+      type: "number",
+      description: "Score for cultural and role fit 0-100"
+    },
+    confidenceClarity: {
+      type: "number",
+      description: "Score for confidence and clarity 0-100"
+    },
+    strengths: {
+      type: "string",
+      description: "List of strengths"
+    },
+    areasForImprovement: {
+      type: "string",
+      description: "Weaknesses and improvement suggestions"
+    },
+    finalAssessment: {
+      type: "string",
+      description: "Final assessment summary"
+    }
+  },
+  required: [
+    "totalScore",
+    "communicationSkills",
+    "technicalKnowledge",
+    "problemSolving",
+    "culturalRoleFit",
+    "confidenceClarity",
+    "strengths",
+    "areasForImprovement",
+    "finalAssessment"
+  ]
+};
+
+
 export const interviewCovers = [
   "/adobe.png",
   "/amazon.png",
