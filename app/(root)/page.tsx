@@ -45,7 +45,7 @@ export default async function Home() {
         <h2> Your interviews</h2>
         <div className="interviews-section">
           {allInterview?.map((interview) => (
-            <InterviewCard  key={interview.id} {...interview} />
+            <InterviewCard  key={interview.id} {...interview} interviewId={interview.id} />
           ))}
         </div>
       </section>

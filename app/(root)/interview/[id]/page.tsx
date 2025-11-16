@@ -1,5 +1,6 @@
 import DisplayTechIcons from '@/compnents/Forms/DisplayTechIcons';
-import { getInterviewById } from '@/lib/action/auth.action';
+import Agent from '@/components/Agent';
+import { getCurrentUser, getInterviewById } from '@/lib/action/auth.action';
 import { getRandomInterviewCover } from '@/lib/utils';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
@@ -9,10 +10,12 @@ const page = async({params}:RouteParams) => {
     const {id}=await params;
     const interview =await getInterviewById(id);
 
+    const user=await getCurrentUser();
     if(!interview) redirect('/interview');
 
   
     return (
+        <>
     <div className='flex flex-row gap-4 justify-between'>
         
         <div className="flex flex-row gap-4 items-center max-sm:flex-col">
@@ -34,6 +37,18 @@ const page = async({params}:RouteParams) => {
 
         <p className='bg-dark-200 px-4 py-2 rounded-lg capitalize h-fit'>{interview.type} </p>
     </div>
+        <p className='bg-dark-200 px-4 py-2 rounded-lg h-fit capitalize'>
+            {interview.type}
+        </p>
+
+        <Agent
+            userName={user?.name || 'User'}
+            interviewId={id}
+            type="interview"
+            questions={interview.questions}
+        />
+
+    </>
   )
 }
 
