@@ -1,6 +1,9 @@
 "use server";
 
+import { feedbackSchema } from "@/constants";
 import { auth, db } from "@/firebasee/admin";
+import { google } from "@ai-sdk/google";
+import { generateObject } from "ai";
 import { cookies } from "next/headers";
 
 // Session duration (1 week)
@@ -104,15 +107,15 @@ export async function getCurrentUser(): Promise<User | null> {
 
   try {
     const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
-    console.log('decodedClaims',decodedClaims.user_id);
+    console.log("decodedClaims", decodedClaims.user_id);
     // get user info from db
     const userRecord = await db
       .collection("users")
       .doc(decodedClaims.user_id)
       .get();
-      console.log('userRecord',userRecord.id);
+    console.log("userRecord", userRecord.id);
     if (!userRecord.exists) return null;
-    console.log('userRecord data',userRecord.data());
+    console.log("userRecord data", userRecord.data());
     return {
       ...userRecord.data(),
       id: userRecord.id,
@@ -144,7 +147,7 @@ export async function getLatestInterviews(
     .limit(limit)
     .get();
 
-    console.log('interviews',interviews.docs.length);
+  console.log("interviews", interviews.docs.length);
 
   return interviews.docs.map((doc) => ({
     id: doc.id,
@@ -162,15 +165,74 @@ export async function getInterviewsByUserId(
     .get();
 
   //  console.log('interviews',interviews.docs.length);
-console.log("userid::",userId)
+  console.log("userid::", userId);
   return interviews.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   })) as Interview[];
 }
 
-export async function getInterviewById(id:string):Promise<Interview |null>{
-  const interview=await db.collection('interviwes').doc(id).get();
-  if(!interview.exists) return {} as Interview;
+export async function createFeedback(params: CreateFeedbackParams) {
+  const { interviewId, userId, transcript, feedbackId } = params;
+
+  try {
+    const formattedTranscript = transcript
+      .map(
+        (sentence: { role: string; content: string }) =>
+          `- ${sentence.role}: ${sentence.content}\n`
+      )
+      .join("");
+
+    const { object } = await generateObject({
+      model: google("gemini-2.0-flash-001"),
+      
+      schema: feedbackSchema,
+      prompt: `
+        You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
+        Transcript:
+        ${formattedTranscript}
+
+        Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
+        - **Communication Skills**: Clarity, articulation, structured responses.
+        - **Technical Knowledge**: Understanding of key concepts for the role.
+        - **Problem-Solving**: Ability to analyze problems and propose solutions.
+        - **Cultural & Role Fit**: Alignment with company values and job role.
+        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.
+        `,
+      system:
+        "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
+    });
+
+    const feedback = {
+      interviewId: interviewId,
+      userId: userId,
+      totalScore: object.totalScore,
+      categoryScores: object.categoryScores,
+      strengths: object.strengths,
+      areasForImprovement: object.areasForImprovement,
+      finalAssessment: object.finalAssessment,
+      createdAt: new Date().toISOString(),
+    };
+
+    let feedbackRef;
+
+    if (feedbackId) {
+      feedbackRef = db.collection("feedback").doc(feedbackId);
+    } else {
+      feedbackRef = db.collection("feedback").doc();
+    }
+
+    await feedbackRef.set(feedback);
+
+    return { success: true, feedbackId: feedbackRef.id };
+  } catch (error) {
+    console.error("Error saving feedback:", error);
+    return { success: false };
+  }
+}
+
+export async function getInterviewById(id: string): Promise<Interview | null> {
+  const interview = await db.collection("interviwes").doc(id).get();
+  if (!interview.exists) return {} as Interview;
   return interview.data() as Interview;
 }
