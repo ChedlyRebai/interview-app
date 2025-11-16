@@ -1,22 +1,21 @@
 import InterviewCard from "@/compnents/InterviewCard";
 import { Button } from "@/components/ui/button";
 import { dummyInterviews } from "@/constants";
-import { getCurrentUser, getInterviewByUserId, getLatestInterviews } from "@/lib/action/auth.action";
+import { getCurrentUser, getInterviewsByUserId, getLatestInterviews } from "@/lib/action/auth.action";
 import { get } from "http";
 import Image from "next/image";
 import Link from "next/link";
 
 export default async function Home() {
   const currentUser = await getCurrentUser();
-
-  const [userInterviews, lastesInterviews] = await Promise.all([
-    await getInterviewByUserId(currentUser?.uid || ""),
-    await getLatestInterviews({ userId: currentUser?.uid || "", limit: 5 }),
-  ])
-
+  console.log('currentUser',currentUser);
+    const [userInterviews, allInterview] = await Promise.all([
+    getInterviewsByUserId(currentUser?.id!),
+    getLatestInterviews({ userId: currentUser?.id! }),
+  ]);
   const hasPastInterviews = userInterviews?.length || 0 > 0;
 
-  const hasUpcomingnterviews = lastesInterviews?.length || 0 > 0;
+  const hasUpcomingnterviews = allInterview?.length || 0 > 0;
   return (
     <>
       <section className="card-cta">
@@ -45,7 +44,7 @@ export default async function Home() {
       <section className="flex flex-col gap-6 mt-6">
         <h2> Your interviews</h2>
         <div className="interviews-section">
-          {dummyInterviews.map((interview) => (
+          {allInterview?.map((interview) => (
             <InterviewCard key={interview.id} {...interview} />
           ))}
         </div>
@@ -68,7 +67,7 @@ export default async function Home() {
       <section className="flex flex-col gap-6 mt-6">
         <h2> Your interviews</h2>
         <div className="interviews-section">
-          {hasPastInterviews ? (lastesInterviews?.map((interview) => (
+          {hasPastInterviews ? (userInterviews?.map((interview) => (
             <InterviewCard key={interview.id} {...interview} />
           ))):(
             <p>

@@ -1,13 +1,14 @@
-import { isAthenticated } from "@/lib/action/auth.action";
+
+import { isAuthenticated } from "@/lib/action/auth.action";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import React, { ReactNode } from "react";
 
 const Rootlayout = async ({children}:{children:ReactNode}) => {
-  const isAuthenticated = await isAthenticated();
+  const isauthenticated = await isAuthenticated();
   
-  if(!isAthenticated){
+  if(!isauthenticated){
     redirect('/sign-in');
   }// Replace with actual authentication logic
   return (
