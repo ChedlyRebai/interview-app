@@ -168,3 +168,9 @@ console.log("userid::",userId)
     ...doc.data(),
   })) as Interview[];
 }
+
+export async function getInterviewById(id:string):Promise<Interview |null>{
+  const interview=await db.collection('interviwes').doc(id).get();
+  if(!interview.exists) return {} as Interview;
+  return interview.data() as Interview;
+}

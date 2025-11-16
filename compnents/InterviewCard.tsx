@@ -5,6 +5,7 @@ import { getRandomInterviewCover } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import DisplayTechIcons from "./Forms/DisplayTechIcons";
+import { int } from "zod/v4";
 const InterviewCard = ({
   interviewId,
   role,
@@ -18,6 +19,7 @@ const InterviewCard = ({
   const formattedDate = dayjs(
     feedback?.createdAt || createdAt || Date.now()
   ).format("MMM D, YYYY");
+  console.log(interviewId, "interviewId")
 
   return (
     <div className="card-border w-[360px] max-sm:w-full min-h-96">

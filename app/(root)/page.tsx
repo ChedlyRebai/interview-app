@@ -14,7 +14,7 @@ export default async function Home() {
     getLatestInterviews({ userId: currentUser?.id! }),
   ]);
   const hasPastInterviews = userInterviews?.length || 0 > 0;
-
+  console.log('allInterview',allInterview);
   const hasUpcomingnterviews = allInterview?.length || 0 > 0;
   return (
     <>
@@ -45,7 +45,7 @@ export default async function Home() {
         <h2> Your interviews</h2>
         <div className="interviews-section">
           {allInterview?.map((interview) => (
-            <InterviewCard key={interview.id} {...interview} />
+            <InterviewCard  key={interview.id} {...interview} />
           ))}
         </div>
       </section>
