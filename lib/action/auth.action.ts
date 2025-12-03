@@ -141,7 +141,7 @@ export async function getLatestInterviews(
     .collection("interviwes")
     .orderBy("createdAt", "desc")
     .where("finalized", "==", true)
-    .where("userId", "!=", userId)
+    .where("userId", "!=", "m7SBirGtQfhB0oqIbEBEyfrIzI43")
     .limit(limit)
     .get();
 
@@ -151,12 +151,31 @@ export async function getLatestInterviews(
   })) as Interview[];
 }
 
+export async function getFeedbackByInterviewId(
+  params: GetFeedbackByInterviewIdParams
+): Promise<Feedback | null> {
+  const { interviewId, userId } = params;
+
+  const querySnapshot = await db
+    .collection("feedback")
+    .where("interviewId", "==", interviewId)
+    .where("userId", "==", "m7SBirGtQfhB0oqIbEBEyfrIzI43")
+    .limit(1)
+    .get();
+
+  if (querySnapshot.empty) return null;
+
+  const feedbackDoc = querySnapshot.docs[0];
+  return { id: feedbackDoc.id, ...feedbackDoc.data() } as Feedback;
+}
+
+
 export async function getInterviewsByUserId(
   userId: string
 ): Promise<Interview[] | null> {
   const interviews = await db
     .collection("interviwes")
-    .where("userId", "==", userId)
+    .where("userId", "==", "m7SBirGtQfhB0oqIbEBEyfrIzI43")
     .orderBy("createdAt", "desc")
     .get();
 
