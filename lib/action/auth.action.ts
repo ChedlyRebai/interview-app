@@ -268,3 +268,4 @@ export async function getInterviewById(id: string): Promise<Interview | null> {
   if (!interview.exists) return {} as Interview;
   return interview.data() as Interview;
 }
+

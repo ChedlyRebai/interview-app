@@ -26,6 +26,7 @@ const authFormSchema = (type: FormType) => {
     email: z.string().email(),
     password: z.string().min(3),
   });
+  
 };
 
 

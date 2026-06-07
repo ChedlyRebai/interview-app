@@ -27,6 +27,7 @@ const Agent = ({
   interviewId,
   feedbackId,
   type,
+  profileImage,
   questions,
 }: AgentProps) => {
   const router = useRouter();
@@ -65,7 +66,6 @@ const Agent = ({
       console.log("Error:", error);
     };
 
- 
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
     vapi.on("message", onMessage);
@@ -83,36 +83,33 @@ const Agent = ({
     };
   }, []);
 
-
-  const handleGenerateFeedback = async(messages:SavedMessage[])=>{
-    // console.log('generate feedback called');
-    // const {success,id}={
-    //   success:true,
-    //   id:'feedback123'
-    // }
-
-    const {success,feedbackId:id}=await createFeedback({
-      interviewId:interviewId!,
-      userId:userId!,
-      transcript:messages,
-      feedbackId:feedbackId
-    })
-
-    if(success && id ){
-      router.push(`/interview/${interviewId}/feedback`);
-    }else{
-      console.log('error saving feedback')
-    }
-  }
   useEffect(() => {
     if (messages.length > 0) {
       setLastMessage(messages[messages.length - 1].content);
     }
 
-    if(callStatus === CallStatus.FINISHED){
-      if(type=== 'generate'){
-        router.push('/')
-      }else{
+    const handleGenerateFeedback = async (messages: SavedMessage[]) => {
+      console.log("handleGenerateFeedback");
+
+      const { success, feedbackId: id } = await createFeedback({
+        interviewId: interviewId!,
+        userId: userId!,
+        transcript: messages,
+        feedbackId,
+      });
+
+      if (success && id) {
+        router.push(`/interview/${interviewId}/feedback`);
+      } else {
+        console.log("Error saving feedback");
+        router.push("/");
+      }
+    };
+
+    if (callStatus === CallStatus.FINISHED) {
+      if (type === "generate") {
+        router.push("/");
+      } else {
         handleGenerateFeedback(messages);
       }
     }
@@ -122,20 +119,12 @@ const Agent = ({
     setCallStatus(CallStatus.CONNECTING);
 
     if (type === "generate") {
-      //Set workflow not asisstence
-      
-      await vapi.start(
-        undefined, // assistant
-        undefined, // assistantOverrides
-        undefined, // squad
-        process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, // workflow ID
-        {
-          variableValues: {
-            username: userName,
-            userid: userId,
-          },
-        }
-      );
+      await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
+        variableValues: {
+          username: userName,
+          userid: userId,
+        },
+      });
     } else {
       let formattedQuestions = "";
       if (questions) {
@@ -144,13 +133,11 @@ const Agent = ({
           .join("\n");
       }
 
-      
-
-       await vapi.start(interviewer, {
-         variableValues: {
-           questions: formattedQuestions,
-         },
-       });
+      await vapi.start(interviewer, {
+        variableValues: {
+          questions: formattedQuestions,
+        },
+      });
     }
   };
 
