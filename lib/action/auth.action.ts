@@ -141,7 +141,7 @@ export async function getLatestInterviews(
     .collection("interviwes")
     .orderBy("createdAt", "desc")
     .where("finalized", "==", true)
-    .where("userId", "!=", "m7SBirGtQfhB0oqIbEBEyfrIzI43")
+    .where("userId", "!=", userId)
     .limit(limit)
     .get();
 
@@ -159,7 +159,7 @@ export async function getFeedbackByInterviewId(
   const querySnapshot = await db
     .collection("feedback")
     .where("interviewId", "==", interviewId)
-    .where("userId", "==", "m7SBirGtQfhB0oqIbEBEyfrIzI43")
+    .where("userId", "==", userId)
     .limit(1)
     .get();
 
@@ -175,7 +175,7 @@ export async function getInterviewsByUserId(
 ): Promise<Interview[] | null> {
   const interviews = await db
     .collection("interviwes")
-    .where("userId", "==", "m7SBirGtQfhB0oqIbEBEyfrIzI43")
+    .where("userId", "==", userId)
     .orderBy("createdAt", "desc")
     .get();
 

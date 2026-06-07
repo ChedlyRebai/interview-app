@@ -77,7 +77,7 @@ async function Home() {
                 createdAt={interview.createdAt}
               />
             ))
-          ) : (
+          ) : ( 
             <p>There are no interviews available</p>
           )}
         </div>
