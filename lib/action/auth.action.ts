@@ -235,7 +235,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
       createdAt: new Date().toISOString(),
       totalScore: object.totalScore,
       // categoryScores: {
-      //   communicationSkills: object.communicationSkills,
+      //   communicationSkills: object.communicationSkills, 
       //   technicalKnowledge: object.technicalKnowledge,
       //   problemSolving: object.problemSolving,
       //   culturalRoleFit: object.culturalRoleFit,

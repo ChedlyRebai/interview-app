@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/action/auth.action";
+import toast from "react-hot-toast";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -118,16 +119,10 @@ const Agent = ({
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
-    if (type === "generate") {
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
-        variableValues: {
-          username: userName,
-          userid: userId,
-        },
-      });
-    } else {
+    try {
       let formattedQuestions = "";
-      if (questions) {
+
+      if (type === "interview" && questions) {
         formattedQuestions = questions
           .map((question) => `- ${question}`)
           .join("\n");
@@ -135,9 +130,15 @@ const Agent = ({
 
       await vapi.start(interviewer, {
         variableValues: {
+          username: userName,
+          userid: userId,
           questions: formattedQuestions,
         },
       });
+    } catch (error) {
+      console.error("Failed to start Vapi call:", error);
+      toast.error("Unable to start the interview call. Check your Vapi configuration.");
+      setCallStatus(CallStatus.INACTIVE);
     }
   };
 
