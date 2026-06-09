@@ -1,9 +1,9 @@
 "use server";
 
-import { feedbackSchema } from "@/constants";
+import { feedbackSchem } from "@/constants";
 import { auth, db } from "@/firebasee/admin";
 import { google } from "@ai-sdk/google";
-import { generateObject } from "ai";
+import { generateObject, jsonSchema } from "ai";
 import { cookies } from "next/headers";
 
 // Session duration (1 week)
@@ -190,7 +190,11 @@ export async function getInterviewsByUserId(
 
 export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId } = params;
-
+  console.log("Creating feedback with params:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;", params);
+  if (!interviewId || !userId) {
+    console.error("Missing interviewId or userId, aborting feedback creation", { interviewId, userId });
+    return { success: false, error: new Error("Missing interviewId or userId") };
+  }
   try {
     // Format transcript as readable bullet points
     const formattedTranscript = transcript
@@ -200,10 +204,11 @@ export async function createFeedback(params: CreateFeedbackParams) {
       )
       .join("");
 
-    // Call Gemini with SAFE schema (no arrays → no proto errors)
+      
+    // Call Gemini with a JSON schema wrapper supported by the AI SDK.
     const { object } = await generateObject({
       model: google("gemini-2.0-flash-001"),
-      schema: feedbackSchema,
+      schema: jsonSchema(feedbackSchem as any),
       system:
         "You are a professional interviewer analyzing a mock interview. Your task is to produce highly structured, strict JSON that matches the provided schema.",
       prompt: `
@@ -220,30 +225,49 @@ export async function createFeedback(params: CreateFeedbackParams) {
         - Confidence & Clarity
 
         Then provide:
-        - strengths
-        - areasForImprovement
+        - strengths (as a single string, separate items with newlines)
+        - areasForImprovement (as a single string, separate items with newlines)
         - finalAssessment
 
         Respond ONLY with data matching the schema.
-      `
+      `,
     });
-    console.log("Generated feedback object:**********************************************", object);
+    const generatedFeedback = object as Record<string, any>;
+    console.log("Generated feedback object:**********************************************", generatedFeedback);
     // Build Firestore document
+    // Parse strengths and areas into arrays if returned as strings
+    const parseList = (val: any) => {
+      if (!val) return [];
+      if (Array.isArray(val)) return val.filter(Boolean).map(String);
+      if (typeof val === "string") {
+        return val
+          .split(/\r?\n|\r|,|;/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+      return [];
+    };
+
+    const strengths = parseList(generatedFeedback.strengths);
+    const areasForImprovement = parseList(generatedFeedback.areasForImprovement);
+
+    const categoryScores = [
+      { name: "Communication Skills", score: generatedFeedback.communicationSkills ?? null, comment: "" },
+      { name: "Technical Knowledge", score: generatedFeedback.technicalKnowledge ?? null, comment: "" },
+      { name: "Problem Solving", score: generatedFeedback.problemSolving ?? null, comment: "" },
+      { name: "Cultural Fit", score: generatedFeedback.culturalRoleFit ?? null, comment: "" },
+      { name: "Confidence and Clarity", score: generatedFeedback.confidenceClarity ?? null, comment: "" },
+    ];
+
     const feedback = {
       interviewId,
       userId,
       createdAt: new Date().toISOString(),
-      totalScore: object.totalScore,
-      // categoryScores: {
-      //   communicationSkills: object.communicationSkills, 
-      //   technicalKnowledge: object.technicalKnowledge,
-      //   problemSolving: object.problemSolving,
-      //   culturalRoleFit: object.culturalRoleFit,
-      //   confidenceClarity: object.confidenceClarity
-      // },
-      strengths: object.strengths,
-      areasForImprovement: object.areasForImprovement,
-      finalAssessment: object.finalAssessment
+      totalScore: generatedFeedback.totalScore ?? null,
+      categoryScores,
+      strengths,
+      areasForImprovement,
+      finalAssessment: generatedFeedback.finalAssessment ?? "",
     };
 
     // Save to Firestore
@@ -258,8 +282,32 @@ export async function createFeedback(params: CreateFeedbackParams) {
 
     return { success: true, feedbackId: feedbackRef.id };
   } catch (error) {
-    console.error("Error saving feedback:", error);
-    return { success: false, error };
+    console.error("Error saving feedback (AI generation or save failed):", error);
+
+    try {
+      // Fallback: save a minimal feedback document so the interview still records feedback
+      const fallback = {
+        interviewId,
+        userId,
+        createdAt: new Date().toISOString(),
+        totalScore: 0,
+        categoryScores: [],
+        strengths: [],
+        areasForImprovement: [],
+        finalAssessment: "Feedback generation failed; no assessment available.",
+      };
+
+      const fallbackRef = feedbackId
+        ? db.collection("feedback").doc(feedbackId)
+        : db.collection("feedback").doc();
+
+      await fallbackRef.set(fallback);
+
+      return { success: true, feedbackId: fallbackRef.id, fallback: true };
+    } catch (saveError) {
+      console.error("Error saving fallback feedback:", saveError);
+      return { success: false, error: saveError };
+    }
   }
 }
 
