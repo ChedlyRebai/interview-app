@@ -28,19 +28,39 @@ export async function POST(request:Request){
 
         });
 
-        const interview ={
-            role,type,level
-            ,techstack:techstack.split(','),
-            questions:JSON.parse(text),
-            userId:userid,
-            finalized:true,
-            coverImage:getRandomInterviewCover(),
-            createdAt:new Date().toISOString()
-        }
+                const interview ={
+                        role,type,level
+                        ,techstack:techstack.split(','),
+                        questions:JSON.parse(text),
+                        userId:userid,
+                        finalized:true,
+                        coverImage:getRandomInterviewCover(),
+                        createdAt:new Date().toISOString()
+                }
 
-        await db.collection("interviwes").add(interview);
+                console.log('[/api/vapi/generate] interview payload:', {
+                    role: interview.role,
+                    type: interview.type,
+                    level: interview.level,
+                    techstack: interview.techstack,
+                    questionsCount: Array.isArray(interview.questions) ? interview.questions.length : 0,
+                    userId: interview.userId,
+                });
 
-        return Response.json({success:true},{status:200});
+                console.log('[/api/vapi/generate] Firebase env:', {
+                    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+                    FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL ? '[present]' : '[missing]',
+                });
+
+                try {
+                    const res = await db.collection("interviwes").add(interview);
+                    console.log('[/api/vapi/generate] Firestore write succeeded, id=', res.id);
+                } catch (writeError) {
+                    console.error('[/api/vapi/generate] Firestore write failed:', writeError);
+                    throw writeError;
+                }
+
+                return Response.json({success:true},{status:200});
 
     } catch (error) {
         console.log(error)

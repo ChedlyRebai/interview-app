@@ -37,7 +37,7 @@ const Agent = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
   const hasGeneratedFeedbackRef = useRef(false);
-
+  console.log("userid:", userId);
   useEffect(() => {
     const onCallStart = () => {
       setCallStatus(CallStatus.ACTIVE);
@@ -102,7 +102,7 @@ const Agent = ({
         feedbackId,
       });
 
-      console.log("feedback generation result", { success, id });
+      console.log("feedback generation result", interviewId, userId, messages, { success, feedbackId: id });
 
       if (success && id) {
         console.log("Feedback generated successfully");
@@ -138,7 +138,7 @@ const Agent = ({
           .join("\n");
       }
 
-      
+   
       await vapi.start(interviewer, {
         variableValues: {
           username: userName,
@@ -146,12 +146,15 @@ const Agent = ({
           questions: formattedQuestions,
         },
       });
+      console.log("feedback generation result2", interviewId, userId, messages);
+
     } catch (error) {
       console.error("Failed to start Vapi call:", error);
       toast.error("Unable to start the interview call. Check your Vapi configuration.");
       setCallStatus(CallStatus.INACTIVE);
     }
   };
+  
 
   const handleDisconnect = () => {
     setCallStatus(CallStatus.FINISHED);

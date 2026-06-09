@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true,
-  },
+  },    
   allowedDevOrigins: [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     "http://localhost:3001",
     "http://127.0.0.1:3001",
     "http://192.168.1.229:3001",
-    "*"
+    "http://192.168.1.229",
   ],
 };
 
