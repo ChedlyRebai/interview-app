@@ -204,7 +204,6 @@ export async function createFeedback(params: CreateFeedbackParams) {
       )
       .join("");
 
-      
     // Call Gemini with a JSON schema wrapper supported by the AI SDK.
     const { object } = await generateObject({
       model: google("gemini-2.0-flash-001"),
