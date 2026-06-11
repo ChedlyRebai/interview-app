@@ -190,7 +190,6 @@ export async function getInterviewsByUserId(
 
 export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId } = params;
-  console.log("Creating feedback with params:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;", params);
   if (!interviewId || !userId) {
     console.error("Missing interviewId or userId, aborting feedback creation", { interviewId, userId });
     return { success: false, error: new Error("Missing interviewId or userId") };
@@ -227,10 +226,6 @@ export async function createFeedback(params: CreateFeedbackParams) {
         - strengths (as a single string, separate items with newlines)
         - areasForImprovement (as a single string, separate items with newlines)
         - finalAssessment
-        but for now create a test object with dummy data to test the flow of the application without actually calling the Gemini API, you can replace it with actual call later.
-
-         Remember, your response MUST be a JSON object that strictly adheres to the provided schema. Do not include any explanations or text outside of the JSON structure. If you do not have enough information to provide a score for a category, set its value to null.
-      
     
 
         Respond ONLY with data matching the schema.
